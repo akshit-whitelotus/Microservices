@@ -1,0 +1,73 @@
+# ==========================
+# Python
+# ==========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+
+# Environment Variables
+.env
+
+# SQLite Database
+*.db
+*.sqlite3
+
+# SQLAlchemy
+*.db-journal
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# MyPy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# Pyright
+.pyright/
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Cache
+.cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Temporary Files
+*.tmp
+*.temp
+
+# Uvicorn Reload Files
+*.pid
+
+# Docker (optional)
+.docker/
+
+# Local configuration
+.env.local
