@@ -13,12 +13,15 @@ Responsibilities
 
 from __future__ import annotations
 
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 
 from app.core.config import settings
 from app.core.database import Base, engine
@@ -26,10 +29,11 @@ from app.core.exceptions import AppException
 from app.core.logging import configure_logging
 from app.core.middleware import RequestLoggingMiddleware
 
-# Import models before create_all()
+# Import models so SQLAlchemy knows them before create_all
 from app.models.student import Student
 
-from app.api.v1.routes.students import router as student_router
+# Import real API router
+from app.api.v1.api import api_router
 
 
 # ---------------------------------------------------------
@@ -40,24 +44,64 @@ configure_logging()
 
 
 # ---------------------------------------------------------
+# Lifespan
+# ---------------------------------------------------------
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
+    """
+    Application startup/shutdown lifecycle.
+
+    Creates database tables after application starts.
+    Retries connection because PostgreSQL may not be ready immediately.
+    """
+
+    max_retries = 10
+    retry_delay = 3
+
+    for attempt in range(max_retries):
+
+        try:
+            print(
+                f"Database initialization attempt "
+                f"{attempt + 1}/{max_retries}"
+            )
+
+            Base.metadata.create_all(bind=engine)
+
+            print("Database tables created successfully")
+            break
+
+        except OperationalError as exc:
+
+            if attempt == max_retries - 1:
+                raise exc
+
+            print(
+                f"Database not ready. "
+                f"Retrying in {retry_delay} seconds..."
+            )
+
+            await asyncio.sleep(retry_delay)
+
+
+    yield
+
+
+    # Shutdown logic if required
+    print("Application shutting down")
+
+
+# ---------------------------------------------------------
 # FastAPI
 # ---------------------------------------------------------
 
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
+    lifespan=lifespan,
 )
-
-
-# ---------------------------------------------------------
-# Create Tables
-# ---------------------------------------------------------
-
-# NOTE:
-# For local development only.
-# In production use Alembic migrations.
-
-Base.metadata.create_all(bind=engine)
 
 
 # ---------------------------------------------------------
@@ -151,10 +195,7 @@ async def generic_exception_handler(
 # Routers
 # ---------------------------------------------------------
 
-app.include_router(
-    student_router,
-    prefix=settings.API_V1_PREFIX,
-)
+app.include_router(api_router)
 
 
 # ---------------------------------------------------------
@@ -163,13 +204,6 @@ app.include_router(
 
 @app.get("/health")
 def health():
-    """
-    Health endpoint.
-
-    Verifies:
-    - FastAPI is running
-    - PostgreSQL is reachable
-    """
 
     with engine.connect() as connection:
         connection.execute(text("SELECT 1"))

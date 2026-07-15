@@ -16,6 +16,11 @@ from pydantic import Field
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
+from shared.auth.constants import (
+    JWT_ISSUER,
+    JWT_AUDIENCE,
+    API_V1_PREFIX,
+)
 
 
 class Settings(BaseSettings):
@@ -38,7 +43,7 @@ class Settings(BaseSettings):
 
     APP_VERSION: str = "1.0.0"
 
-    API_V1_PREFIX: str = "/api/v1"
+    API_V1_PREFIX: str = API_V1_PREFIX
 
     DEBUG: bool = True
 
@@ -70,9 +75,9 @@ class Settings(BaseSettings):
 
     JWT_ALGORITHM: str = "HS256"
 
-    JWT_ISSUER: str = "auth-service"
+    JWT_ISSUER: str = JWT_ISSUER
 
-    JWT_AUDIENCE: str = "student-service"
+    JWT_AUDIENCE: str = JWT_AUDIENCE
 
     # ---------------------------------------------------------
     # Pagination
