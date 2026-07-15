@@ -7,11 +7,9 @@ use exactly the same JWT implementation.
 
 from __future__ import annotations
 
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
 
-from jose import jwt
+from jose import jwt, JWTError
 
 
 def create_access_token(
@@ -24,16 +22,16 @@ def create_access_token(
     audience: str,
 ) -> str:
 
-    expire = datetime.now(
-        timezone.utc
-    ) + timedelta(
+    now = datetime.now(timezone.utc)
+
+    expire = now + timedelta(
         minutes=expires_minutes
     )
 
     payload = {
         "sub": subject,
+        "iat": now,
         "exp": expire,
-        "iat": datetime.now(timezone.utc),
         "iss": issuer,
         "aud": audience,
     }
@@ -52,7 +50,7 @@ def decode_access_token(
     algorithm: str,
     issuer: str,
     audience: str,
-):
+) -> dict:
 
     return jwt.decode(
         token,
