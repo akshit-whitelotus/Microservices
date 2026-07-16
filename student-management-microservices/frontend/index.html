@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management System</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --background: #f9fafb;
+            --surface: #ffffff;
+            --text-main: #111827;
+            --text-muted: #4b5563;
+            --border: #e5e7eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Container & Navigation */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info {
+            text-align: right;
+            font-size: 0.875rem;
+        }
+
+        .user-email {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        /* Views management */
+        .view {
+            display: none;
+        }
+        .view.active {
+            display: block;
+        }
+
+        /* Forms */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .auth-card {
+            max-width: 450px;
+            margin: 4rem auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.375rem;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.875rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background-color: var(--surface);
+            color: var(--text-main);
+            transition: border-color 0.15s ease-in-out;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--radius);
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border-color: var(--border);
+            color: var(--text-muted);
+        }
+
+        .btn-outline:hover {
+            background-color: #f3f4f6;
+            color: var(--text-main);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger-hover);
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* Custom alert notification system */
+        #alert-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: var(--radius);
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            box-shadow: var(--shadow);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .alert-error { background-color: var(--danger); }
+        .alert-success { background-color: var(--success); }
+        .alert-info { background-color: var(--primary); }
+
+        .alert-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            line-height: 1;
+            padding-left: 0.75rem;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Dashboard Layout Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        /* Interactive Tables */
+        .table-responsive {
+            overflow-x: auto;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+
+        th {
+            background-color: #f3f4f6;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #f9fafb;
+        }
+
+        /* Pagination style */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+        }
+
+        .pagination-info {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Modals & Backdrop */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 900;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 500px;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        /* Loader Overlay */
+        .spinner {
+            border: 3px solid rgba(0,0,0,0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Utility helper classes */
+        .text-center { text-align: center; }
+        .mb-4 { margin-bottom: 1rem; }
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .align-center { align-items: center; }
+        .gap-2 { gap: 0.5rem; }
+        .toggle-auth {
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .toggle-auth:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="alert-container"></div>
+
+    <!-- Header bar -->
+    <header id="app-header" style="display: none;">
+        <h1>🎓 StudentPortal</h1>
+        <div class="user-profile">
+            <div class="user-info">
+                <div id="header-username" style="font-weight: 600;">-</div>
+                <div id="header-email" class="user-email">-</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <!-- Main Views -->
+    <main class="container">
+        
+        <!-- Auth View -->
+        <section id="view-auth" class="view active">
+            <div class="card auth-card">
+                <!-- Login Segment -->
+                <div id="auth-login-section">
+                    <h2 class="mb-4">Sign In</h2>
+                    <form id="form-login" onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label for="login-username">Username</label>
+                            <input type="text" id="login-username" class="form-control" required autocomplete="username">
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" class="form-control" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+                    </form>
+                    <p class="text-center" style="margin-top: 1.5rem; font-size: 0.875rem;">
+                        Don't have an account? <span class="toggle-auth" onclick="toggleAuthView(false)">Register here</span>
+                    </p>
+                </div>
+
+                <!-- Register Segment -->
+                <div id="auth-register-section" style="display: none;">
+                    <h2 class="mb-4">Create Account</h2>
+                    <form id="form-register" onsubmit="handleRegister(event)">
+                        <div class="form-group">
+                            <label for="reg-username">Username</label>
+                            <input type="text" id="reg-username" class="form-control" required autocomplete="username">
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-email">Email Address</label>
+                            <input type="email" id="reg-email" class="form-control" required autocomplete="email">
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-password">Password</label>
+                            <input type="password" id="reg-password" class="form-control" required autocomplete="new-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
+                    </form>
+                    <p class="text-center" style="margin-top: 1.5rem; font-size: 0.875rem;">
+                        Already registered? <span class="toggle-auth" onclick="toggleAuthView(true)">Sign in here</span>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard View -->
+        <section id="view-dashboard" class="view">
+            <div class="dashboard-grid">
+                
+                <!-- Student Entry Form -->
+                <div>
+                    <div class="card mb-4">
+                        <h3 class="mb-4">Register New Student</h3>
+                        <form id="form-create-student" onsubmit="handleCreateStudent(event)">
+                            <div class="form-group">
+                                <label for="st-firstname">First Name</label>
+                                <input type="text" id="st-firstname" class="form-control" required placeholder="John">
+                            </div>
+                            <div class="form-group">
+                                <label for="st-lastname">Last Name</label>
+                                <input type="text" id="st-lastname" class="form-control" required placeholder="Doe">
+                            </div>
+                            <div class="form-group">
+                                <label for="st-email">Email Address</label>
+                                <input type="email" id="st-email" class="form-control" required placeholder="john.doe@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="st-course">Course Title</label>
+                                <input type="text" id="st-course" class="form-control" required placeholder="Computer Science">
+                            </div>
+                            <div class="form-group">
+                                <label for="st-year">Enrollment Year</label>
+                                <input type="number" id="st-year" class="form-control" required min="2000" max="2100" placeholder="2026">
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">Create Student Record</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Student List & Actions -->
+                <div>
+                    <div class="table-responsive">
+                        <div class="flex justify-between align-center" style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);">
+                            <h3 style="font-size: 1.125rem; font-weight: 600;">Enrolled Students</h3>
+                            <button class="btn btn-outline btn-sm" onclick="fetchStudents(currentPage)">🔄 Refresh</button>
+                        </div>
+                        <div id="table-loader" style="display: none;">
+                            <div class="spinner"></div>
+                        </div>
+                        <table id="students-table">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Email</th>
+                                    <th>Course</th>
+                                    <th>Enrollment</th>
+                                    <th style="text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-table-body">
+                                <!-- Dynamically populated rows -->
+                            </tbody>
+                        </table>
+                        <div class="pagination">
+                            <span class="pagination-info" id="pagination-info">Showing page 0 of 0</span>
+                            <div class="pagination-controls">
+                                <button class="btn btn-outline btn-sm" id="btn-prev" onclick="changePage(-1)">Previous</button>
+                                <button class="btn btn-outline btn-sm" id="btn-next" onclick="changePage(1)">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Edit Student Modal -->
+    <div id="edit-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Student Details</h3>
+                <button onclick="closeEditModal()" class="btn btn-outline btn-sm" style="border: none; font-size: 1.25rem;">&times;</button>
+            </div>
+            <form id="form-edit-student" onsubmit="handleUpdateStudent(event)">
+                <input type="hidden" id="edit-id">
+                <div class="form-group">
+                    <label for="edit-firstname">First Name</label>
+                    <input type="text" id="edit-firstname" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-lastname">Last Name</label>
+                    <input type="text" id="edit-lastname" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-email">Email Address</label>
+                    <input type="email" id="edit-email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-course">Course Title</label>
+                    <input type="text" id="edit-course" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-year">Enrollment Year</label>
+                    <input type="number" id="edit-year" class="form-control" required min="2000" max="2100">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Javascript Logical Tier -->
+    <script>
+        // API Base configuration
+        const API_BASE = "http://localhost:8080";
+
+        // Application State
+        let token = null;
+        let currentUser = null;
+        let currentPage = 1;
+        const pageSize = 10;
+
+        // Custom UI Notification Alerts helper
+        function showAlert(message, type = "info") {
+            const container = document.getElementById("alert-container");
+            const alert = document.createElement("div");
+            alert.className = `alert alert-${type}`;
+            
+            const textSpan = document.createElement("span");
+            textSpan.textContent = message;
+            alert.appendChild(textSpan);
+
+            const closeBtn = document.createElement("button");
+            closeBtn.className = "alert-close";
+            closeBtn.innerHTML = "&times;";
+            closeBtn.onclick = () => alert.remove();
+            alert.appendChild(closeBtn);
+
+            container.appendChild(alert);
+
+            // Automatically sweep up alerts after 6 seconds
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateX(100%)';
+                alert.style.transition = 'all 0.3s ease-out';
+                setTimeout(() => alert.remove(), 300);
+            }, 6000);
+        }
+
+        // Consolidated API Request Handler
+        async function fetchAPI(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            
+            // Auto inject JWT Auth Headers if present
+            if (token) {
+                options.headers = {
+                    ...options.headers,
+                    "Authorization": `Bearer ${token}`
+                };
+            }
+
+            try {
+                const response = await fetch(url, options);
+
+                // Safe state catch for expired sessions/invalid configurations
+                if (response.status === 401) {
+                    logout();
+                    showAlert("Your session has expired or authentication failed. Please sign in again.", "error");
+                    throw new Error("Unauthorized access (401)");
+                }
+
+                if (response.status === 204) {
+                    return null; // Return cleanly on no-content responses
+                }
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    const errMsg = data?.detail || data?.message || `API Error: ${response.statusText}`;
+                    throw new Error(errMsg);
+                }
+
+                return data;
+            } catch (error) {
+                if (error.message !== "Unauthorized access (401)") {
+                    showAlert(error.message || "Network error. Failed to reach api gateway.", "error");
+                }
+                throw error;
+            }
+        }
+
+        // Toggle authentication panel components
+        function toggleAuthView(showLogin) {
+            document.getElementById("auth-login-section").style.display = showLogin ? "block" : "none";
+            document.getElementById("auth-register-section").style.display = showLogin ? "none" : "block";
+        }
+
+        // User registration controller
+        async function handleRegister(event) {
+            event.preventDefault();
+            const username = document.getElementById("reg-username").value;
+            const email = document.getElementById("reg-email").value;
+            const password = document.getElementById("reg-password").value;
+
+            try {
+                await fetchAPI("/api/v1/auth/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, email, password })
+                });
+                showAlert("Account created successfully! You can now log in.", "success");
+                document.getElementById("form-register").reset();
+                toggleAuthView(true);
+            } catch (err) {
+                // Error handled and reported by dynamic interceptor alerts
+            }
+        }
+
+        // User login controller
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById("login-username").value;
+            const password = document.getElementById("login-password").value;
+
+            // Prepare application/x-www-form-urlencoded format 
+            const formBody = new URLSearchParams();
+            formBody.append("username", username);
+            formBody.append("password", password);
+
+            try {
+                const data = await fetchAPI("/api/v1/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: formBody
+                });
+
+                token = data.access_token;
+                await fetchCurrentUserProfile();
+                showAlert("Welcome back! Loading your panel dashboard...", "success");
+                switchViews(true);
+                fetchStudents(1);
+            } catch (err) {
+                // Log and error handling mapped cleanly via API gateway failures
+            }
+        }
+
+        // Verify current active profile details
+        async function fetchCurrentUserProfile() {
+            try {
+                currentUser = await fetchAPI("/api/v1/auth/me");
+                document.getElementById("header-username").textContent = currentUser.username;
+                document.getElementById("header-email").textContent = currentUser.email;
+            } catch (err) {
+                logout();
+            }
+        }
+
+        // Clear State Session elements
+        function logout() {
+            token = null;
+            currentUser = null;
+            switchViews(false);
+            document.getElementById("form-login").reset();
+            document.getElementById("form-register").reset();
+        }
+
+        // Swap interface view-states dynamically
+        function switchViews(toDashboard) {
+            const authView = document.getElementById("view-auth");
+            const dashboardView = document.getElementById("view-dashboard");
+            const header = document.getElementById("app-header");
+
+            if (toDashboard) {
+                authView.classList.remove("active");
+                dashboardView.classList.add("active");
+                header.style.display = "flex";
+            } else {
+                dashboardView.classList.remove("active");
+                authView.classList.add("active");
+                header.style.display = "none";
+            }
+        }
+
+        // Native Client-side Regex Validator matching spec requirements
+        function validateStudentData(firstName, lastName, email, course, year) {
+            const nameRegex = /^[A-Za-z\s-]{2,100}$/;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!nameRegex.test(firstName)) {
+                showAlert("First Name must be 2-100 characters and contain only alphabetical letters.", "error");
+                return false;
+            }
+            if (!nameRegex.test(lastName)) {
+                showAlert("Last Name must be 2-100 characters and contain only alphabetical letters.", "error");
+                return false;
+            }
+            if (!emailRegex.test(email)) {
+                showAlert("Please present a valid Email address structural sequence.", "error");
+                return false;
+            }
+            if (course.length < 2 || course.length > 150) {
+                showAlert("Course text structure length must sit between 2-150 characters limit range.", "error");
+                return false;
+            }
+            const numericYear = parseInt(year);
+            if (isNaN(numericYear) || numericYear < 2000 || numericYear > 2100) {
+                showAlert("Enrollment Year validation limits fall strictly between year 2000 and 2100 inclusive.", "error");
+                return false;
+            }
+            return true;
+        }
+
+        // Student Data retrieval
+        async function fetchStudents(page) {
+            const tableBody = document.getElementById("students-table-body");
+            const loader = document.getElementById("table-loader");
+            
+            tableBody.style.opacity = "0.5";
+            loader.style.display = "block";
+
+            try {
+                const data = await fetchAPI(`/api/v1/students?page=${page}&page_size=${pageSize}`);
+                renderStudents(data.items);
+                updatePaginationControls(data.total, data.page, data.page_size);
+                currentPage = data.page;
+            } catch (err) {
+                // Clear table array visualization to maintain sync clarity
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center" style="color: var(--danger);">Failed to load student inventory index</td></tr>`;
+            } finally {
+                tableBody.style.opacity = "1";
+                loader.style.display = "none";
+            }
+        }
+
+        // Render dynamic student dataset lines
+        function renderStudents(students) {
+            const tableBody = document.getElementById("students-table-body");
+            tableBody.innerHTML = "";
+
+            if (!students || students.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center" style="padding: 2rem; color: var(--text-muted);">No records found matching current query filters</td></tr>`;
+                return;
+            }
+
+            students.forEach(student => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td style="font-weight: 500;">${escapeHTML(student.first_name)} ${escapeHTML(student.last_name)}</td>
+                    <td>${escapeHTML(student.email)}</td>
+                    <td>${escapeHTML(student.course)}</td>
+                    <td>${student.enrollment_year}</td>
+                    <td style="text-align: right;">
+                        <div class="flex gap-2 justify-end">
+                            <button class="btn btn-outline btn-sm" onclick="openEditModal('${student.id}')">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteStudent('${student.id}')">Delete</button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // Handle page indexing adjustments safely
+        function changePage(direction) {
+            const nextTarget = currentPage + direction;
+            fetchStudents(nextTarget);
+        }
+
+        // Dynamic State UI updates
+        function updatePaginationControls(total, page, size) {
+            const totalPages = Math.ceil(total / size) || 1;
+            document.getElementById("pagination-info").textContent = `Showing page ${page} of ${totalPages} (${total} total)`;
+            
+            document.getElementById("btn-prev").disabled = (page <= 1);
+            document.getElementById("btn-next").disabled = (page >= totalPages);
+        }
+
+        // Create student controller
+        async function handleCreateStudent(event) {
+            event.preventDefault();
+            const first_name = document.getElementById("st-firstname").value.trim();
+            const last_name = document.getElementById("st-lastname").value.trim();
+            const email = document.getElementById("st-email").value.trim();
+            const course = document.getElementById("st-course").value.trim();
+            const enrollment_year = parseInt(document.getElementById("st-year").value);
+
+            if (!validateStudentData(first_name, last_name, email, course, enrollment_year)) {
+                return;
+            }
+
+            try {
+                await fetchAPI("/api/v1/students", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ first_name, last_name, email, course, enrollment_year })
+                });
+                showAlert("Success! New student registration created successfully.", "success");
+                document.getElementById("form-create-student").reset();
+                fetchStudents(currentPage); // reload current list catalog view page
+            } catch (err) {
+                // API errors processed gracefully via alerts
+            }
+        }
+
+        // Open edit dialog modal populated with remote object details
+        async function openEditModal(studentId) {
+            try {
+                const student = await fetchAPI(`/api/v1/students/${studentId}`);
+                document.getElementById("edit-id").value = student.id;
+                document.getElementById("edit-firstname").value = student.first_name;
+                document.getElementById("edit-lastname").value = student.last_name;
+                document.getElementById("edit-email").value = student.email;
+                document.getElementById("edit-course").value = student.course;
+                document.getElementById("edit-year").value = student.enrollment_year;
+
+                document.getElementById("edit-modal").classList.add("active");
+            } catch (err) {
+                showAlert("Could not retrieve current profile metadata from API index.", "error");
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById("edit-modal").classList.remove("active");
+            document.getElementById("form-edit-student").reset();
+        }
+
+        // Handle partial update processing logic
+        async function handleUpdateStudent(event) {
+            event.preventDefault();
+            const id = document.getElementById("edit-id").value;
+            const first_name = document.getElementById("edit-firstname").value.trim();
+            const last_name = document.getElementById("edit-lastname").value.trim();
+            const email = document.getElementById("edit-email").value.trim();
+            const course = document.getElementById("edit-course").value.trim();
+            const enrollment_year = parseInt(document.getElementById("edit-year").value);
+
+            if (!validateStudentData(first_name, last_name, email, course, enrollment_year)) {
+                return;
+            }
+
+            try {
+                await fetchAPI(`/api/v1/students/${id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ first_name, last_name, email, course, enrollment_year })
+                });
+                showAlert("Success! Student index dataset saved cleanly.", "success");
+                closeEditModal();
+                fetchStudents(currentPage);
+            } catch (err) {
+                // API handled
+            }
+        }
+
+        // Perform record deletion actions
+        async function deleteStudent(studentId) {
+            if (confirm("Are you sure you want to permanently delete this student record? This action is irreversible.")) {
+                try {
+                    await fetchAPI(`/api/v1/students/${studentId}`, {
+                        method: "DELETE"
+                    });
+                    showAlert("Student record successfully deleted.", "success");
+                    fetchStudents(currentPage);
+                } catch (err) {
+                    // API errors logged
+                }
+            }
+        }
+
+        // Basic helper function to prevent XSS injection attacks
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
