@@ -21,11 +21,11 @@ from sqlalchemy.exc import IntegrityError
 # ---------------------------------------------------------
 
 def create_student(
-    client,
+    authenticated_client,
     email="exception@test.com",
 ):
 
-    return client.post(
+    return authenticated_client.post(
         "/students",
         json={
             "first_name": "John",
@@ -43,13 +43,13 @@ def create_student(
 # ---------------------------------------------------------
 
 def test_not_found_exception(
-    client,
+    authenticated_client,
 ):
 
     import uuid
 
 
-    response = client.get(
+    response = authenticated_client.get(
         f"/students/{uuid.uuid4()}",
     )
 
@@ -71,11 +71,11 @@ def test_not_found_exception(
 # ---------------------------------------------------------
 
 def test_conflict_exception_duplicate_email(
-    client,
+    authenticated_client,
 ):
 
     first = create_student(
-        client,
+        authenticated_client,
         "duplicate@test.com",
     )
 
@@ -85,7 +85,7 @@ def test_conflict_exception_duplicate_email(
 
 
     second = create_student(
-        client,
+        authenticated_client,
         "duplicate@test.com",
     )
 
@@ -105,10 +105,10 @@ def test_conflict_exception_duplicate_email(
 # ---------------------------------------------------------
 
 def test_validation_exception(
-    client,
+    authenticated_client,
 ):
 
-    response = client.post(
+    response = authenticated_client.post(
         "/students",
         json={
             "first_name": "A",
@@ -144,10 +144,10 @@ def test_validation_exception(
 # ---------------------------------------------------------
 
 def test_extra_fields_validation(
-    client,
+    authenticated_client,
 ):
 
-    response = client.post(
+    response = authenticated_client.post(
         "/students",
         json={
             "first_name": "John",
@@ -169,7 +169,7 @@ def test_extra_fields_validation(
 # ---------------------------------------------------------
 
 def test_database_integrity_error_handler(
-    client,
+    authenticated_client,
 ):
 
     with patch(
@@ -186,7 +186,7 @@ def test_database_integrity_error_handler(
         )
 
 
-        response = client.post(
+        response = authenticated_client.post(
             "/students",
             json={
                 "first_name": "John",
@@ -217,7 +217,7 @@ def test_database_integrity_error_handler(
 # ---------------------------------------------------------
 
 def test_generic_exception_handler(
-    client,
+    authenticated_client,
 ):
 
     with patch(
@@ -230,7 +230,7 @@ def test_generic_exception_handler(
         )
 
 
-        response = client.get(
+        response = authenticated_client.get(
             "/students",
         )
 
@@ -254,13 +254,13 @@ def test_generic_exception_handler(
 # ---------------------------------------------------------
 
 def test_error_response_structure(
-    client,
+    authenticated_client,
 ):
 
     import uuid
 
 
-    response = client.get(
+    response = authenticated_client.get(
         f"/students/{uuid.uuid4()}",
     )
 

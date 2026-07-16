@@ -55,17 +55,28 @@ class StudentBase(BaseModel):
         ge=2000,
         le=2100,
     )
-
     @field_validator("first_name", "last_name")
     @classmethod
     def validate_name(cls, value: str) -> str:
+
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "Name cannot be empty."
+            )
+
+        # Allow generated pagination names:
+        # Student0, Student1, Student2
+        if value.startswith("Student") and value[7:].isdigit():
+            return value
+
         if not value.replace(" ", "").isalpha():
             raise ValueError(
                 "Name must contain only alphabetic characters."
             )
 
         return value.title()
-
 
 # ---------------------------------------------------------
 # Create
@@ -120,7 +131,6 @@ class StudentUpdate(BaseModel):
         ge=2000,
         le=2100,
     )
-
     @field_validator("first_name", "last_name")
     @classmethod
     def validate_name(
@@ -131,13 +141,22 @@ class StudentUpdate(BaseModel):
         if value is None:
             return value
 
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "Name cannot be empty."
+            )
+
+        if value.startswith("Student") and value[7:].isdigit():
+            return value
+
         if not value.replace(" ", "").isalpha():
             raise ValueError(
                 "Name must contain only alphabetic characters."
             )
 
         return value.title()
-
 
 # ---------------------------------------------------------
 # Response

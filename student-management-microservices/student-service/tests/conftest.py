@@ -158,32 +158,35 @@ def mock_auth():
             iat=1000000000,
         )
 
-
-    app.dependency_overrides[
-        get_current_user
-    ] = override_current_user
-
+    app.dependency_overrides[get_current_user] = override_current_user
 
     yield
 
-
-    app.dependency_overrides.clear()
-
+    app.dependency_overrides.pop(
+        get_current_user,
+        None,
+    )
 
 
 # ---------------------------------------------------------
-# Test Client
+# Normal client (real authentication)
 # ---------------------------------------------------------
 
 @pytest.fixture
 def client(
     override_database,
-    
 ):
 
-    with TestClient(app) as client:
-
+    with TestClient(
+    app,
+    raise_server_exceptions=False,
+) as client:
         yield client
+
+
+# ---------------------------------------------------------
+# Authenticated client (mock authentication)
+# ---------------------------------------------------------
 
 @pytest.fixture
 def authenticated_client(
@@ -191,5 +194,8 @@ def authenticated_client(
     mock_auth,
 ):
 
-    with TestClient(app) as client:
+    with TestClient(
+    app,
+    raise_server_exceptions=False,
+) as client:
         yield client

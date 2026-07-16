@@ -30,7 +30,7 @@ from app.services.student_service import StudentService
 
 router = APIRouter(
     prefix="/students",
-    tags=["Students"],
+    tags=["Students"],  
 )
 
 service = StudentService()

@@ -71,3 +71,6 @@ dist/
 
 # Local configuration
 .env.local
+student-management-microservices 2.zip
+.gitignore
+student-management-microservices.zip
