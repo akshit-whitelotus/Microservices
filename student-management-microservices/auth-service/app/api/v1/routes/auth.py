@@ -1,20 +1,31 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.dependencies import (
+    get_current_user,
+    get_token_payload,
+)
 from app.db.database import get_db
+from app.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import (
     UserCreate,
-    UserLogin,
     UserResponse,
-    Token,
 )
+
+from app.schemas.token import Token, TokenPayload
+
+from shared.auth.constants import ACCESS_TOKEN_TYPE
+
 from app.services.auth_service import AuthService
-from app.core.dependencies import get_current_user
-from app.models.user import User
 
 router = APIRouter()
 
+
+# ---------------------------------------------------------
+# Register
+# ---------------------------------------------------------
 
 @router.post(
     "/register",
@@ -25,12 +36,15 @@ async def register(
     user: UserCreate,
     db: AsyncSession = Depends(get_db),
 ):
-
     repo = UserRepository(db)
     service = AuthService(repo)
 
     return await service.register(user)
 
+
+# ---------------------------------------------------------
+# Login
+# ---------------------------------------------------------
 
 @router.post(
     "/login",
@@ -38,10 +52,8 @@ async def register(
 )
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-
     db: AsyncSession = Depends(get_db),
 ):
-
     repo = UserRepository(db)
     service = AuthService(repo)
 
@@ -58,8 +70,13 @@ async def login(
 
     return {
         "access_token": token,
-        "token_type": "bearer",
+        "token_type": ACCESS_TOKEN_TYPE,
     }
+
+
+# ---------------------------------------------------------
+# Current User
+# ---------------------------------------------------------
 
 @router.get(
     "/me",
@@ -71,10 +88,18 @@ async def get_me(
     return current_user
 
 
-@router.post("/verify")
-async def verify_token(current_user=Depends(get_current_user)):
-    return {
-        "id": current_user.id,
-        "username": current_user.username,
-        "email": current_user.email,
-    }
+# ---------------------------------------------------------
+# Verify Token
+# ---------------------------------------------------------
+
+
+
+
+@router.post(
+    "/verify",
+    response_model=TokenPayload,
+)
+async def verify_token(
+    payload: TokenPayload = Depends(get_token_payload),
+):
+    return payload

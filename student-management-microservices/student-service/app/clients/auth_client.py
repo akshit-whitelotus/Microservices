@@ -1,29 +1,45 @@
+from __future__ import annotations
+
 import httpx
-from fastapi import HTTPException
 
-AUTH_SERVICE_URL = "http://127.0.0.1:8002"
+from fastapi import HTTPException, status
+
+from app.core.config import settings
 
 
-async def verify_token(token: str):
+async def verify_token(token: str) -> dict:
 
-    print("TOKEN RECEIVED IN STUDENT SERVICE:")
-    print(token)
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            f"{AUTH_SERVICE_URL}/api/v1/auth/verify",
-            headers={
-                "Authorization": f"Bearer {token}"
-            }
-        )
+            response = await client.post(
+                f"{settings.AUTH_SERVICE_URL}/api/v1/auth/verify",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                },
+            )
 
-    print("AUTH SERVICE STATUS:", response.status_code)
-    print("AUTH SERVICE RESPONSE:", response.text)
+    except httpx.RequestError:
 
-    if response.status_code != 200:
         raise HTTPException(
-            status_code=401,
-            detail="Invalid token"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authentication service unavailable.",
         )
 
-    return response.json()
+
+    if response.status_code == 200:
+        return response.json()
+
+
+    if response.status_code in (401, 403):
+
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token.",
+        )
+
+
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Authentication service error.",
+    )

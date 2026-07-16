@@ -4,7 +4,7 @@ JWT token response schemas.
 Responsibilities
 ----------------
 - Define authentication response models.
-- Used by the login endpoint.
+- Used by login endpoint.
 """
 
 from __future__ import annotations
@@ -13,11 +13,10 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 
+from shared.auth.constants import ACCESS_TOKEN_TYPE
+
 
 class Token(BaseModel):
-    """
-    JWT access token response.
-    """
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -29,15 +28,12 @@ class Token(BaseModel):
     )
 
     token_type: str = Field(
-        default="bearer",
+        default=ACCESS_TOKEN_TYPE,
         description="Token type"
     )
 
 
 class TokenPayload(BaseModel):
-    """
-    JWT payload after decoding.
-    """
 
     model_config = ConfigDict(
         extra="ignore",

@@ -13,12 +13,21 @@ from app.core.security import (
 
 class AuthService:
 
-    def __init__(self, repo: UserRepository):
+    def __init__(
+        self,
+        repo: UserRepository,
+    ):
         self.repo = repo
 
-    async def register(self, user: UserCreate):
 
-        existing = await self.repo.get_by_email(user.email)
+    async def register(
+        self,
+        user: UserCreate,
+    ):
+
+        existing = await self.repo.get_by_email(
+            user.email
+        )
 
         if existing:
             raise HTTPException(
@@ -29,23 +38,42 @@ class AuthService:
         db_user = User(
             username=user.username,
             email=user.email,
-            hashed_password=get_password_hash(user.password),
+            hashed_password=get_password_hash(
+                user.password
+            ),
         )
 
-        return await self.repo.create(db_user)
+        return await self.repo.create(
+            db_user
+        )
 
-    async def login(self, username: str, password: str):
 
-        user = await self.repo.get_by_username(username)
+    async def login(
+        self,
+        username: str,
+        password: str,
+    ):
+
+        user = await self.repo.get_by_username(
+            username
+        )
 
         if not user:
             return None
 
-        if not verify_password(password, user.hashed_password):
+
+        if not verify_password(
+            password,
+            user.hashed_password,
+        ):
             return None
 
+
         token = create_access_token(
-            {"sub": str(user.id)}
+            {
+                "sub": str(user.id),
+            }
         )
+
 
         return token
