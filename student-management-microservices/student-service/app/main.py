@@ -34,6 +34,8 @@ from app.models.student import Student
 
 # Import real API router
 from app.api.v1.api import api_router
+from fastapi import HTTPException
+from fastapi.encoders import jsonable_encoder
 
 
 # ---------------------------------------------------------
@@ -128,6 +130,7 @@ async def app_exception_handler(
     request: Request,
     exc: AppException,
 ):
+
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -140,18 +143,43 @@ async def app_exception_handler(
     )
 
 
+@app.exception_handler(HTTPException)
+async def http_exception_handler(
+    request: Request,
+    exc: HTTPException,
+):
+
+    status_code = exc.status_code
+
+    # FastAPI HTTPBearer missing token
+    if exc.detail == "Not authenticated":
+        status_code = 403
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "error": {
+                "code": "HTTP_ERROR",
+                "message": exc.detail,
+                "details": None,
+            }
+        },
+    )
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(
     request: Request,
     exc: RequestValidationError,
 ):
+
     return JSONResponse(
         status_code=422,
         content={
             "error": {
                 "code": "VALIDATION_ERROR",
                 "message": "Request validation failed.",
-                "details": exc.errors(),
+                "details": jsonable_encoder(exc.errors()),
             }
         },
     )
@@ -162,6 +190,7 @@ async def integrity_error_handler(
     request: Request,
     exc: IntegrityError,
 ):
+
     return JSONResponse(
         status_code=409,
         content={
@@ -179,6 +208,7 @@ async def generic_exception_handler(
     request: Request,
     exc: Exception,
 ):
+
     return JSONResponse(
         status_code=500,
         content={
@@ -189,8 +219,6 @@ async def generic_exception_handler(
             }
         },
     )
-
-
 # ---------------------------------------------------------
 # Routers
 # ---------------------------------------------------------

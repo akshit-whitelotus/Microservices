@@ -2,42 +2,48 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import Depends,HTTPException
+import httpx
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy.orm import Session
+from pydantic import ValidationError
 
 from app.clients.auth_client import verify_token
 from app.core.database import get_db
 from app.schemas.token import TokenPayload
 
 
-security = HTTPBearer()
-
+security = HTTPBearer(auto_error=True)
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> TokenPayload:
-  
 
     token = credentials.credentials
 
-    payload = await verify_token(token)
     try:
-        return TokenPayload.model_validate(payload)
+        payload = await verify_token(token)
+
+    except HTTPException:
+        raise
 
     except Exception:
         raise HTTPException(
-        status_code=401,
-        detail="Invalid authentication payload.",
-    )
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token.",
+        )
 
+    try:
+        return TokenPayload.model_validate(payload)
+
+    except ValidationError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication payload.",
+        )
 
 def get_current_user_id(
     payload: TokenPayload = Depends(get_current_user),
 ) -> UUID:
-    """
-    Convenience dependency that returns the authenticated user's UUID.
-    """
 
     return UUID(payload.sub)
 
