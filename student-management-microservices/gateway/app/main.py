@@ -6,7 +6,7 @@ import httpx
 from app.core.config import settings
 from app.proxy import proxy_request
 from app.openapi_merge import merged_openapi
-
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Unified Gateway API",
@@ -14,7 +14,19 @@ app = FastAPI(
     openapi_url=None,
 )
 
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:5500",
+    # add your frontend URL if different
+]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,      # or ["*"] for development
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # -------------------------------
 # OpenAPI

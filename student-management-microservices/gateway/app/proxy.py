@@ -23,27 +23,53 @@ def clean_headers(headers):
 
 
 
+def downstream_path(path: str) -> str:
+
+    """
+    Convert gateway paths to service paths.
+
+    Gateway:
+        /api/v1/students
+        /api/v1/auth/login
+
+    Downstream:
+        /students
+        /auth/login
+    """
+
+    if path.startswith("/api/v1/students"):
+        new_path = path.replace(
+            "/api/v1/students",
+            "/students",
+            1,
+        )
+
+        return new_path or "/students"
+
+
+    if path.startswith("/api/v1/auth"):
+
+        new_path = path.replace(
+            "/api/v1/auth",
+            "/api/v1/auth",
+            1,
+        )
+
+        return new_path
+
+
+    return path
+
+
+
 async def proxy_request(
     request: Request,
     target_url: str,
 ):
 
-    path = request.scope["path"]
-
-
-    # pytest-httpx expects trailing slash
-    if (
-        path.startswith("/api/v1/students")
-        and path == "/api/v1/students"
-    ):
-        path += "/"
-
-
-    if (
-        path.startswith("/api/v1/auth")
-        and path == "/api/v1/auth"
-    ):
-        path += "/"
+    path = downstream_path(
+        request.url.path
+    )
 
 
     url = f"{target_url}{path}"
@@ -55,8 +81,16 @@ async def proxy_request(
 
     body = await request.body()
 
+
     headers = clean_headers(
         request.headers
+    )
+
+
+    print(
+        "FORWARDING:",
+        request.method,
+        url,
     )
 
 
@@ -84,12 +118,7 @@ async def proxy_request(
         )
 
 
-    except httpx.RequestError as exc:
-
-        print(
-            "PROXY ERROR:",
-            repr(exc),
-        )
+    except httpx.RequestError:
 
         return JSONResponse(
             status_code=503,
