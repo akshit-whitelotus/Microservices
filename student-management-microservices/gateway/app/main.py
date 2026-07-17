@@ -41,6 +41,7 @@ async def openapi():
     return await merged_openapi(
         settings.AUTH_SERVICE_URL,
         settings.STUDENT_SERVICE_URL,
+        settings.DOCUMENT_SERVICE_URL
     )
 
 
@@ -143,7 +144,49 @@ async def student_proxy(
         settings.STUDENT_SERVICE_URL,
     )
 
+# -------------------------------
+# DOCUMENT PROXY
+# -------------------------------
 
+
+@app.api_route(
+    "/api/v1/documents",
+    methods=[
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+    ],
+)
+@app.api_route(
+    "/api/v1/documents/",
+    methods=[
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+    ],
+)
+@app.api_route(
+    "/api/v1/documents/{path:path}",
+    methods=[
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+    ],
+)
+async def document_proxy(
+    request: Request,
+):
+
+    return await proxy_request(
+        request,
+        settings.DOCUMENT_SERVICE_URL,
+    )
 
 # -------------------------------
 # HEALTH
@@ -155,65 +198,79 @@ async def health():
     services = {}
 
 
+    targets = {
+
+        "auth":
+        settings.AUTH_SERVICE_URL,
+
+
+        "student":
+        settings.STUDENT_SERVICE_URL,
+
+
+        "document":
+        settings.DOCUMENT_SERVICE_URL,
+
+    }
+
+
     async with httpx.AsyncClient(
         timeout=settings.REQUEST_TIMEOUT_SECONDS
     ) as client:
 
 
-        # AUTH
-        try:
+        for name,url in targets.items():
 
-            response = await client.get(
-                f"{settings.AUTH_SERVICE_URL}/api/v1/health"
-            )
+            try:
 
-            services["auth"] = {
-                "status": "healthy",
-                "response": response.json(),
-            }
+                response = await client.get(
+                    f"{url}/health"
+                )
 
 
-        except httpx.RequestError:
+                services[name] = {
 
-            services["auth"] = {
-                "status": "unreachable"
-            }
+                    "status":
+                    "healthy",
 
+                    "response":
+                    response.json(),
 
-
-        # STUDENT
-        try:
-
-            response = await client.get(
-                f"{settings.STUDENT_SERVICE_URL}/api/v1/health"
-            )
-
-            services["students"] = {
-                "status": "healthy",
-                "response": response.json(),
-            }
+                }
 
 
-        except httpx.RequestError:
+            except httpx.RequestError:
 
-            services["students"] = {
-                "status": "unreachable"
-            }
+
+                services[name] = {
+
+                    "status":
+                    "unreachable"
+
+                }
 
 
 
     overall = (
         "healthy"
         if all(
-            service["status"] == "healthy"
-            for service in services.values()
+            x["status"]=="healthy"
+            for x in services.values()
         )
-        else "degraded"
+        else
+        "degraded"
     )
 
 
     return {
-        "gateway": "healthy",
-        "overall": overall,
-        "services": services,
+
+        "gateway":
+        "healthy",
+
+        "overall":
+        overall,
+
+        "services":
+        services,
+
     }

@@ -6,7 +6,7 @@ class GradeUpsertItem(BaseModel):
     student_id:int=Field(...,gt=0)
     subject:str=Field(...,min_length=1, max_length=100)
     marks:float=Field(...,ge=0)
-    max_marks:float=Field(...,default=100,gt=0)
+    max_marks:float=Field(gt=0,default=100)
     exam_term:str=Field(...,min_length=1,max_length=100)
     source_document_id:str=Field(...,min_length=1,max_length=64)
     uploaded_by:int=Field(...,gt=0)

@@ -45,6 +45,15 @@ def downstream_path(path: str) -> str:
         )
 
         return new_path or "/students"
+    if path.startswith(
+        "/api/v1/documents"
+    ):
+
+        return path.replace(
+            "/api/v1/documents",
+            "/documents",
+            1,
+        ) or "/documents"
 
 
     if path.startswith("/api/v1/auth"):
@@ -85,6 +94,9 @@ async def proxy_request(
     headers = clean_headers(
         request.headers
     )
+    headers["X-INTERNAL-SERVICE-KEY"] = (
+    settings.INTERNAL_SERVICE_SECRET
+)
 
 
     print(
