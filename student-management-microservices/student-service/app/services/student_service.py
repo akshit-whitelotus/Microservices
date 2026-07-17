@@ -13,9 +13,6 @@ No SQL should exist here.
 """
 
 from __future__ import annotations
-
-from uuid import UUID
-
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -73,7 +70,7 @@ class StudentService:
     def get_student(
         self,
         db: Session,
-        student_id: UUID,
+        student_id: int,
     ) -> Student:
 
         student = self.repository.get_by_id(
@@ -143,7 +140,7 @@ class StudentService:
         self,
         db: Session,
         *,
-        student_id: UUID,
+        student_id: int,
         student_update: StudentUpdate,
     ) -> Student:
 
@@ -184,7 +181,7 @@ class StudentService:
     def delete_student(
         self,
         db: Session,
-        student_id: UUID,
+        student_id: int,
     ) -> None:
 
         student = self.get_student(

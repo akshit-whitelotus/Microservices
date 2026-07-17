@@ -14,16 +14,19 @@ app = FastAPI(
     openapi_url=None,
 )
 
-origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:5500",
-    # add your frontend URL if different
-]
-
+# The frontend authenticates with a Bearer token (not cookies), so we don't
+# need allow_credentials=True here. That means we can safely allow any
+# origin -- which also fixes the case where the frontend is opened directly
+# as a local file (Origin: null) or served from a port/host not in a fixed
+# whitelist. Previously this list only allowed http://localhost:3000 and
+# http://127.0.0.1:5500, so every request from anywhere else (including
+# file:// pages) was silently blocked by the browser after a successful
+# response from the server -- this was the actual cause of "login not
+# working" and the rest of the frontend failing along with it.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,      # or ["*"] for development
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

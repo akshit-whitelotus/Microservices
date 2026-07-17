@@ -1,18 +1,6 @@
-"""
-Student model.
-
-Responsibilities
-----------------
-- Database representation of a student.
-- No business logic.
-"""
-
 from __future__ import annotations
-
-import uuid
 from datetime import datetime
 from datetime import timezone
-
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import DateTime
@@ -20,7 +8,7 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 
 from app.core.database import Base
-from app.core.types import GUID
+
 
 
 class Student(Base):
@@ -30,10 +18,10 @@ class Student(Base):
 
     __tablename__ = "students"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        GUID(),
+    id: Mapped[int] = mapped_column(
+        Integer,
         primary_key=True,
-        default=uuid.uuid4,
+        autoincrement=True,
     )
 
     first_name: Mapped[str] = mapped_column(

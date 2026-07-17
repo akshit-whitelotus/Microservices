@@ -20,6 +20,7 @@ def create_access_token(
     expires_minutes: int,
     issuer: str,
     audience: str,
+    role:str | None =None
 ) -> str:
 
     now = datetime.now(timezone.utc)
@@ -35,6 +36,8 @@ def create_access_token(
         "iss": issuer,
         "aud": audience,
     }
+    if role is not None:
+        payload["role"]=role
 
     return jwt.encode(
         payload,

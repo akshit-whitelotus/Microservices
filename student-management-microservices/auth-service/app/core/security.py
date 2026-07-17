@@ -32,6 +32,7 @@ def create_access_token(data: dict) -> str:
 
     return create_jwt_token(
         subject=str(data["sub"]),
+        role=data.get("role"),
         secret_key=settings.JWT_SECRET_KEY,
         algorithm=settings.JWT_ALGORITHM,
         expires_minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,

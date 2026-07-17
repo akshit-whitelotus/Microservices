@@ -58,3 +58,16 @@ class BadRequestException(AppException):
             status_code=400,
             error_code="BAD_REQUEST",
         )
+
+class UnauthorizedException(AppException):
+    def __init__(
+        self,
+        message: str = "Unauthorized.",
+        details: dict | None = None,
+    ):
+        super().__init__(
+            status_code=401,
+            error_code="UNAUTHORIZED",
+            message=message,
+            details=details,
+        )

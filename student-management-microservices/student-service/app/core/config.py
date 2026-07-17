@@ -57,7 +57,10 @@ class Settings(BaseSettings):
         ...,
         description="PostgreSQL database URL",
     )
-
+    INTERNAL_SERVICE_TOKEN: str = Field(
+    ...,
+        description="Shared secret for internal service communication.",
+    )
     # ---------------------------------------------------------
     # Auth Service
     # ---------------------------------------------------------

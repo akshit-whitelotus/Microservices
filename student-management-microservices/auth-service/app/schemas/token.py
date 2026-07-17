@@ -40,6 +40,7 @@ class TokenPayload(BaseModel):
     )
 
     sub: str
+    role:str
     iss: str
     aud: str
     exp: int

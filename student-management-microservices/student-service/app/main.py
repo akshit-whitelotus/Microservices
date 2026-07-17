@@ -24,19 +24,16 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError, OperationalError
 
 from app.core.config import settings
-from app.core.database import Base, engine
+from app.core.database import engine
 from app.core.exceptions import AppException
 from app.core.logging import configure_logging
 from app.core.middleware import RequestLoggingMiddleware
-
-# Import models so SQLAlchemy knows them before create_all
-from app.models.student import Student
-
 # Import real API router
 from app.api.v1.api import api_router
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
-
+from app.models.student import Student
+from app.models.grade import Grade
 
 # ---------------------------------------------------------
 # Configure logging
@@ -51,53 +48,8 @@ configure_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
-    """
-    Application startup/shutdown lifecycle.
-
-    Creates database tables after application starts.
-    Retries connection because PostgreSQL may not be ready immediately.
-    """
-
-    max_retries = 10
-    retry_delay = 3
-
-    for attempt in range(max_retries):
-
-        try:
-            print(
-                f"Database initialization attempt "
-                f"{attempt + 1}/{max_retries}"
-            )
-
-            Base.metadata.create_all(bind=engine)
-
-            print("Database tables created successfully")
-            break
-
-        except OperationalError as exc:
-
-            if attempt == max_retries - 1:
-                raise exc
-
-            print(
-                f"Database not ready. "
-                f"Retrying in {retry_delay} seconds..."
-            )
-
-            await asyncio.sleep(retry_delay)
-
-
     yield
-
-
-    # Shutdown logic if required
     print("Application shutting down")
-
-
-# ---------------------------------------------------------
-# FastAPI
-# ---------------------------------------------------------
 
 app = FastAPI(
     title=settings.APP_NAME,
