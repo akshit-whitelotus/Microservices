@@ -11,7 +11,6 @@ from pydantic_settings import (
 from shared.auth.constants import (
     JWT_ISSUER,
     JWT_AUDIENCE,
-    API_V1_PREFIX,
 )
 
 
@@ -19,18 +18,37 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=".env",
+        env_file_encoding="utf-8",
         extra="ignore",
     )
+
+
+    # -------------------------------------------------
+    # Application
+    # -------------------------------------------------
 
     APP_NAME: str = "Document Service"
 
     APP_VERSION: str = "1.0.0"
 
-    API_V1_PREFIX: str = API_V1_PREFIX
+    LOG_LEVEL: str = "INFO"
 
-    DATABASE_URL: str
 
-    JWT_SECRET_KEY: str
+    # -------------------------------------------------
+    # Database
+    # -------------------------------------------------
+
+    DATABASE_URL: str 
+
+
+    # -------------------------------------------------
+    # JWT
+    # -------------------------------------------------
+
+    JWT_SECRET_KEY: str = Field(
+        ...,
+        min_length=32,
+    )
 
     JWT_ALGORITHM: str = "HS256"
 
@@ -38,15 +56,42 @@ class Settings(BaseSettings):
 
     JWT_AUDIENCE: str = JWT_AUDIENCE
 
+
+    # -------------------------------------------------
+    # AI
+    # -------------------------------------------------
+
     AI_API_URL: str
 
     AI_API_KEY: str
 
-    STUDENT_SERVICE_URL: str
+
+    # -------------------------------------------------
+    # Student Service
+    # -------------------------------------------------
+
+    STUDENT_SERVICE_URL: str = (
+        "http://localhost:8001"
+    )
+
+
+    # -------------------------------------------------
+    # Internal Authentication
+    # -------------------------------------------------
 
     INTERNAL_SERVICE_TOKEN: str
 
-    UPLOAD_DIR: str = "uploads"
+
+    # -------------------------------------------------
+    # Storage
+    # -------------------------------------------------
+
+    UPLOAD_DIR: str = "./uploads"
+    ALLOWED_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+    ]
+
 
 
 @lru_cache
