@@ -142,128 +142,61 @@ class DocumentService:
 
 
                 # ---------------------------------------------
-                # Extract text
+                # 1. Extract raw text from the stored file
                 # ---------------------------------------------
-
                 text = self.extractor.extract(
                     document.file_path,
                     document.content_type,
                 )
 
-
-                logger.info(
-                    "Extracted text",
-                    extra={
-                        "length": len(text),
-                        "preview": text[:300],
-                    },
-                )
-
-
-                if not text.strip():
-                    raise ValueError(
-                        "No readable text found in document"
-                    )
-
-
                 # ---------------------------------------------
-                # AI extraction
+                # 2. Ask the AI to pull marks rows out of it
                 # ---------------------------------------------
-
-                ai_rows = await self.ai_client.extract_grades(
+                raw_rows = await self.ai_client.extract_grades(
                     text
                 )
 
-
-                logger.info(
-                    "AI extracted rows",
-                    extra={
-                        "rows": ai_rows,
-                    },
-                )
-
-
-                # ---------------------------------------------
-                # Validate AI response
-                # ---------------------------------------------
-
-                validated_rows = []
-
-                for row in ai_rows:
-
-                    validated_rows.append(
-                        ExtractedGradeRow(
-                            **row
+                # Validate/coerce each row before sending anything
+                # downstream -- drop rows that don't match the shape
+                # instead of failing the whole document.
+                valid_rows: list[ExtractedGradeRow] = []
+                for raw_row in raw_rows:
+                    try:
+                        valid_rows.append(
+                            ExtractedGradeRow(**raw_row)
                         )
+                    except Exception:
+                        logger.warning(
+                            "Skipping malformed row from AI output",
+                            extra={
+                                "document_id": document_id,
+                                "row": raw_row,
+                            },
+                        )
+
+                if not valid_rows:
+                    raise ValueError(
+                        "No valid grade rows were extracted from the document"
                     )
 
-
-                grade_items = [
-
-                    {
-                        "student_id": row.student_id,
-                        "subject": row.subject,
-                        "marks": row.marks,
-                        "max_marks": row.max_marks,
-                        "exam_term": row.exam_term,
-                    }
-
-                    for row in validated_rows
-
-                ]
-
-
-                logger.info(
-                    "Sending grades",
-                    extra={
-                        "items": grade_items,
-                    },
-                )
-
-
                 # ---------------------------------------------
-                # Student service
+                # 3. Push the parsed rows into student-service
                 # ---------------------------------------------
-
-                result = await self.student_client.bulk_upsert_grades(
-                    items=grade_items,
+                upsert_result = await self.student_client.bulk_upsert_grades(
+                    items=[row.model_dump() for row in valid_rows],
                     uploaded_by=document.uploaded_by,
-                    source_document_id=str(
-                        document.id
-                    ),
+                    source_document_id=str(document.id),
                 )
-
-
-                logger.info(
-                    "Student service response",
-                    extra={
-                        "result": result,
-                    },
-                )
-
 
                 summary = {
-
-                    "matched": (
-                        result.get(
-                            "created",
-                            0,
-                        )
-                        +
-                        result.get(
-                            "updated",
-                            0,
-                        )
+                    "matched": upsert_result.get("created", 0)
+                    + upsert_result.get("updated", 0),
+                    "created": upsert_result.get("created", 0),
+                    "updated": upsert_result.get("updated", 0),
+                    "not_found_student_ids": upsert_result.get(
+                        "not_found_student_ids", []
                     ),
-
-                    "not_found_student_ids":
-                        result.get(
-                            "not_found_student_ids",
-                            [],
-                        ),
-
-                    "prompt_version":
-                        PROMPT_VERSION,
+                    "prompt_version": PROMPT_VERSION,
                 }
 
 
@@ -286,20 +219,22 @@ class DocumentService:
                 )
 
 
-                document = await self.repository.get_by_id(
-                    db,
-                    document_id,
-                )
+                async with AsyncSessionLocal() as error_db:
 
-
-                if document:
-
-                    await self.repository.update_status(
-                        db,
-                        document,
-                        status=DocumentStatus.failed,
-                        error_message=str(exc),
+                    document = await self.repository.get_by_id(
+                        error_db,
+                        document_id,
                     )
+
+
+                    if document:
+
+                        await self.repository.update_status(
+                            error_db,
+                            document,
+                            status=DocumentStatus.failed,
+                            error_message=str(exc),
+                        )
     # ---------------------------------------------------------
     # Get Document
     # ---------------------------------------------------------

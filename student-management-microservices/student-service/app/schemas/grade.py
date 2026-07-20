@@ -15,7 +15,7 @@ class BulkUpsertRequest(BaseModel):
     items:list[GradeUpsertItem]
 
 class BulkUpsertResult(BaseModel):
-    created_at:int
+    created:int
     updated:int
     not_found_student_ids:list[int]
 
@@ -23,7 +23,7 @@ class GradeResponse(BaseModel):
     model_config=ConfigDict(from_attributes=True)
     id:int
     student_id:int
-    subject:int
+    subject:str
     marks:float
     max_marks:float
     exam_term:str

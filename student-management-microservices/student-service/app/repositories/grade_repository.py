@@ -1,5 +1,5 @@
 from __future__ import annotations
-from sqlalchemy import select
+from sqlalchemy import select, literal_column
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 from app.models.grade import Grade
@@ -34,17 +34,28 @@ class GradeRepository:
             "updated_at":stmt.excluded.updated_at
         }
         stmt=(stmt.on_conflict_do_update(
-            constraint="uq_grade_student_subject_term",
+            constraint="uq_grade_subject_term",
             set_=update_values
+        ).returning(
+            Grade.id,
+            # Postgres upsert trick: xmax is 0 for a row that was freshly
+            # inserted by this statement, and non-zero for a row that
+            # existed already and was updated by the ON CONFLICT branch.
+            # This is what lets us report real created vs updated counts
+            # instead of a single combined "affected rows" number.
+            literal_column("(xmax = 0)").label("inserted"),
         ))
         result=db.execute(stmt)
+        returned_rows=result.all()
+
+        created=sum(1 for row in returned_rows if row.inserted)
+        updated=sum(1 for row in returned_rows if not row.inserted)
 
         return (
-            result.rowcount,
-            0,
+            created,
+            updated,
             missing_ids
         )
     def list_for_student(self,db:Session,student_id:int)->list[Grade]:
         stmt=(select(Grade).where(Grade.student_id==student_id).order_by(Grade.subject))
         return list(db.scalars(stmt).all())
-    
