@@ -74,3 +74,4 @@ dist/
 student-management-microservices 2.zip
 .gitignore
 student-management-microservices.zip
+student-management-microservices/document-service/uploads/sample-marks-sheet-2.pdf
