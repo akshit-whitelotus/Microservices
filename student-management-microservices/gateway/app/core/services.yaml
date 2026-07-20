@@ -1,10 +1,9 @@
 services:
-
   auth:
     name: Auth Service
     host: 127.0.0.1
     port: 8002
-    path: ../auth-service
+    path: auth-service
     app: app.main:app
     health: /health
 
@@ -12,7 +11,7 @@ services:
     name: Student Service
     host: 127.0.0.1
     port: 8001
-    path: ../student-service
+    path: student-service
     app: app.main:app
     health: /health
 
@@ -20,7 +19,7 @@ services:
     name: Document Service
     host: 127.0.0.1
     port: 8003
-    path: ../document-service
+    path: document-service
     app: app.main:app
     health: /health
 
@@ -28,6 +27,6 @@ services:
     name: AI Service
     host: 127.0.0.1
     port: 8099
-    path: ../Mock_ai_server
+    path: Mock_ai_server
     app: app.main:app
     health: /health

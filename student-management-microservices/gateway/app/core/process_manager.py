@@ -4,6 +4,7 @@ import os
 import signal
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 from app.core.service_registry import ServiceRegistry
@@ -22,20 +23,17 @@ class ProcessManager:
         # student-management/
         self.project_root = self.gateway_root.parent
 
-    def start_all(self):
-        """
-        Start every configured microservice.
-        """
 
+
+    def start_all(self):
         services = self.registry.get_services()
 
         for service_key, service in services.items():
 
-            service_path = (
-                self.project_root / service["path"]
-            ).resolve()
+            service_path = (self.project_root / service["path"]).resolve()
 
-            command = [sys.executable,
+            command = [
+                sys.executable,
                 "-m",
                 "uvicorn",
                 service["app"],
@@ -45,13 +43,33 @@ class ProcessManager:
                 str(service["port"]),
             ]
 
-            logger.info(f"Starting {service['name']}...")
+            logger.info("=" * 80)
+            logger.info(f"Starting {service['name']}")
+            logger.info(f"Directory : {service_path}")
+            logger.info(f"Exists    : {service_path.exists()}")
+            logger.info(f"Command   : {' '.join(command)}")
 
-            process = subprocess.Popen(command,cwd=service_path,stdout=None,stderr=None,start_new_session=True,)
+            process = subprocess.Popen(
+                command,
+                cwd=service_path,
+                stdout=sys.stdout,
+                stderr=sys.stderr,
+                start_new_session=True,
+            )
+            time.sleep(2)
+
+            if process.poll() is not None:
+                stdout, stderr = process.communicate()
+
+                logger.error(f"{service['name']} crashed!")
+                logger.error(f"Exit code: {process.returncode}")
+                logger.error(stdout)
+                logger.error(stderr)
+                continue
+
+            logger.info(f"{service['name']} running (PID={process.pid})")
 
             self.processes[service_key] = process
-            logger.info(f"{service['name']} started "
-                f"(PID={process.pid}, PORT={service['port']})")
 
     def stop_all(self):
         logger.info("Stopping all microservices...")
