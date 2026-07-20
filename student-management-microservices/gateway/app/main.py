@@ -1,17 +1,42 @@
 from fastapi import FastAPI, Request
 from fastapi.openapi.docs import get_swagger_ui_html
-
+from contextlib import asynccontextmanager
+import asyncio
+from app.core.process_manager import ProcessManager
 import httpx
-
+from app.core.health_monitor import HealthMonitor
 from app.core.config import settings
 from app.proxy import proxy_request
 from app.openapi_merge import merged_openapi
 from fastapi.middleware.cors import CORSMiddleware
 
+@asynccontextmanager
+async def lifespan(app:FastAPI):
+    health_monitor = HealthMonitor()
+    app.state.health_monitor = health_monitor
+    await asyncio.sleep(5)
+    health_task = asyncio.create_task(
+    health_monitor.monitor())
+    try:
+        yield
+    finally:
+        health_monitor.cancel()
+        try:
+            await health_monitor
+        except asyncio.CancelledError:
+            pass
+        health_monitor.stop_all()
+
+
+
+
+
+
 app = FastAPI(
     title="Unified Gateway API",
     docs_url=None,
     openapi_url=None,
+    lifespan=lifespan
 )
 
 # The frontend authenticates with a Bearer token (not cookies), so we don't
@@ -41,7 +66,8 @@ async def openapi():
     return await merged_openapi(
         settings.AUTH_SERVICE_URL,
         settings.STUDENT_SERVICE_URL,
-        settings.DOCUMENT_SERVICE_URL
+        settings.DOCUMENT_SERVICE_URL,
+        settings.AI_SERVICE_URL
     )
 
 

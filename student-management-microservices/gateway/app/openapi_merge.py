@@ -69,6 +69,7 @@ async def merged_openapi(
     auth_url: str,
     student_url: str,
     document_url: str,
+    ai_service_url
 ):
 
 
@@ -96,6 +97,9 @@ async def merged_openapi(
 
     document = await fetch_spec(
         f"{document_url}/openapi.json"
+    )
+    document = await fetch_spec(
+        f"{ai_service_url}/openapi.json"
     )
 
 
