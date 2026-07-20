@@ -171,7 +171,7 @@ class StudentResponse(BaseModel):
         from_attributes=True,
     )
 
-    id: UUID
+    id: int
 
     first_name: str
 

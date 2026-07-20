@@ -45,15 +45,8 @@ def downstream_path(path: str) -> str:
         )
 
         return new_path or "/students"
-    if path.startswith(
-        "/api/v1/documents"
-    ):
-
-        return path.replace(
-            "/api/v1/documents",
-            "/documents",
-            1,
-        ) or "/documents"
+    if path.startswith("/api/v1/documents"):
+        return path
 
 
     if path.startswith("/api/v1/auth"):
