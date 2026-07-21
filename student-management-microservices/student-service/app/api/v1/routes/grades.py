@@ -11,6 +11,10 @@ from app.services.grade_service import GradeService
 router=APIRouter(tags=["Grades"])
 service=GradeService()
 
+# NOTE: open to any authenticated user (same as the student roster this
+# is linked from in the frontend), not scoped to "your own grades only".
+# Doing that properly needs a Student.user_id -> auth-service user link
+# that doesn't exist yet -- tracked as follow-up work, not fixed here.
 @router.get("/students/{student_id}/grades",response_model=list[GradeResponse])
 def list_student_grades(student_id:int,db:Session=Depends(get_db),_:TokenPayload=Depends(get_current_user)):
     return service.list_students_grades(db=db,student_id=student_id)

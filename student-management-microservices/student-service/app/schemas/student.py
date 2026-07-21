@@ -19,6 +19,8 @@ from pydantic import EmailStr
 from pydantic import Field
 from pydantic import field_validator
 
+from shared.common.pagination import Page
+
 
 # ---------------------------------------------------------
 # Base Schema
@@ -192,15 +194,11 @@ class StudentResponse(BaseModel):
 # Paginated Response
 # ---------------------------------------------------------
 
-class StudentListResponse(BaseModel):
+class StudentListResponse(Page[StudentResponse]):
     """
     Paginated list response.
+
+    Reuses the shared `Page[T]` envelope (shared/common/pagination.py)
+    instead of redefining the same items/total/page/page_size shape
+    every service needs.
     """
-
-    items: list[StudentResponse]
-
-    total: int
-
-    page: int
-
-    page_size: int

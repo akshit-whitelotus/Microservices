@@ -62,13 +62,11 @@ class Settings(BaseSettings):
         description="Shared secret for internal service communication.",
     )
     # ---------------------------------------------------------
-    # Auth Service
-    # ---------------------------------------------------------
-
-    AUTH_SERVICE_URL: str = "http://localhost:8000"
-
-    # ---------------------------------------------------------
     # JWT
+    #
+    # Tokens are validated locally (see app/core/security.py) using
+    # the same secret/issuer/audience auth-service signs with -- no
+    # AUTH_SERVICE_URL is needed for request-time authentication.
     # ---------------------------------------------------------
 
     JWT_SECRET_KEY: str = Field(
