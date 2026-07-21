@@ -81,14 +81,8 @@ def test_get_student_not_found(
     authenticated_client,
 ):
 
-    import uuid
-
-
-    random_id = uuid.uuid4()
-
-
     response = authenticated_client.get(
-        f"/students/{random_id}"
+        "/students/999999999"
     )
 
 
@@ -106,10 +100,10 @@ def test_get_student_not_found(
 
 
 # ---------------------------------------------------------
-# Invalid UUID
+# Non-Numeric ID
 # ---------------------------------------------------------
 
-def test_get_student_invalid_uuid(
+def test_get_student_non_numeric_id(
     authenticated_client,
 ):
 

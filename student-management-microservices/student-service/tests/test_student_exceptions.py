@@ -46,11 +46,8 @@ def test_not_found_exception(
     authenticated_client,
 ):
 
-    import uuid
-
-
     response = authenticated_client.get(
-        f"/students/{uuid.uuid4()}",
+        "/students/999999999",
     )
 
 
@@ -257,11 +254,8 @@ def test_error_response_structure(
     authenticated_client,
 ):
 
-    import uuid
-
-
     response = authenticated_client.get(
-        f"/students/{uuid.uuid4()}",
+        "/students/999999999",
     )
 
 

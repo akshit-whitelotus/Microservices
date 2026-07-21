@@ -62,6 +62,11 @@ from app.core.middleware import (
     RequestLoggingMiddleware,
 )
 
+from shared.common.responses import (
+    ErrorBody,
+    ErrorResponse,
+)
+
 
 from app.api.v1.api import (
     api_router,
@@ -141,13 +146,13 @@ async def app_exception_handler(
 
     return JSONResponse(
         status_code=exc.status_code,
-        content={
-            "error": {
-                "code": exc.error_code,
-                "message": exc.message,
-                "details": exc.details,
-            }
-        },
+        content=ErrorResponse(
+            error=ErrorBody(
+                code=exc.error_code,
+                message=exc.message,
+                details=exc.details,
+            )
+        ).model_dump(mode="json"),
     )
 
 
@@ -160,13 +165,12 @@ async def http_exception_handler(
 
     return JSONResponse(
         status_code=exc.status_code,
-        content={
-            "error": {
-                "code": "HTTP_ERROR",
-                "message": exc.detail,
-                "details": None,
-            }
-        },
+        content=ErrorResponse(
+            error=ErrorBody(
+                code="HTTP_ERROR",
+                message=exc.detail,
+            )
+        ).model_dump(mode="json"),
     )
 
 
@@ -181,17 +185,13 @@ async def validation_exception_handler(
 
     return JSONResponse(
         status_code=422,
-        content={
-            "error": {
-                "code": "VALIDATION_ERROR",
-                "message": (
-                    "Request validation failed."
-                ),
-                "details": jsonable_encoder(
-                    exc.errors()
-                ),
-            }
-        },
+        content=ErrorResponse(
+            error=ErrorBody(
+                code="VALIDATION_ERROR",
+                message="Request validation failed.",
+                details=jsonable_encoder(exc.errors()),
+            )
+        ).model_dump(mode="json"),
     )
 
 
@@ -206,17 +206,12 @@ async def integrity_exception_handler(
 
     return JSONResponse(
         status_code=409,
-        content={
-            "error": {
-                "code": (
-                    "DATABASE_CONFLICT"
-                ),
-                "message": (
-                    "Database integrity error."
-                ),
-                "details": None,
-            }
-        },
+        content=ErrorResponse(
+            error=ErrorBody(
+                code="DATABASE_CONFLICT",
+                message="Database integrity error.",
+            )
+        ).model_dump(mode="json"),
     )
 
 
@@ -229,17 +224,12 @@ async def generic_exception_handler(
 
     return JSONResponse(
         status_code=500,
-        content={
-            "error": {
-                "code": (
-                    "INTERNAL_SERVER_ERROR"
-                ),
-                "message": (
-                    "Unexpected server error."
-                ),
-                "details": None,
-            }
-        },
+        content=ErrorResponse(
+            error=ErrorBody(
+                code="INTERNAL_SERVER_ERROR",
+                message="Unexpected server error.",
+            )
+        ).model_dump(mode="json"),
     )
 
 

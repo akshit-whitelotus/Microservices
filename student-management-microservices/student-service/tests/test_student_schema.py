@@ -14,7 +14,6 @@ from __future__ import annotations
 
 
 from datetime import datetime, timezone
-from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
@@ -296,7 +295,7 @@ def test_student_update_invalid_name():
 def test_student_response_model():
 
     response = StudentResponse(
-        id=uuid4(),
+        id=1,
         first_name="John",
         last_name="Doe",
         email="john@test.com",
@@ -324,7 +323,7 @@ def test_student_response_model():
 def test_student_list_response():
 
     item = StudentResponse(
-        id=uuid4(),
+        id=1,
         first_name="John",
         last_name="Doe",
         email="john@test.com",

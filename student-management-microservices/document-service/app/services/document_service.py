@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
@@ -83,8 +84,29 @@ class DocumentService:
             exist_ok=True,
         )
 
+        # `filename` is client-controlled (the browser sends whatever
+        # the uploader's OS gave the file). Two problems with using it
+        # as-is:
+        #
+        # 1. Path traversal / arbitrary write: `Path("/uploads") /
+        #    "/etc/cron.d/evil"` resolves to `/etc/cron.d/evil`
+        #    (an absolute right-hand side overrides the left side),
+        #    and `Path("/uploads") / "../../x"` escapes the upload
+        #    directory the same way any `..` traversal would.
+        # 2. Two uploads with the same original filename would
+        #    silently overwrite each other on disk.
+        #
+        # `Path(filename).name` strips any directory component
+        # (leading slashes, `..` segments) down to a bare filename,
+        # and the uuid4 prefix guarantees a unique, non-empty name on
+        # disk regardless of what the client sent -- while the
+        # original `filename` is still stored separately in the DB
+        # for display purposes.
+        safe_name = Path(filename).name or "upload"
+        stored_filename = f"{uuid4().hex}_{safe_name}"
+
         file_path = (
-            upload_dir / filename
+            upload_dir / stored_filename
         )
 
         file_path.write_bytes(

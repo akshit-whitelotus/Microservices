@@ -11,7 +11,6 @@ class Settings(BaseSettings):
     STUDENT_SERVICE_URL: str
 
     DOCUMENT_SERVICE_URL: str
-    AI_SERVICE_URL:str
 
 
     REQUEST_TIMEOUT_SECONDS: float = 5

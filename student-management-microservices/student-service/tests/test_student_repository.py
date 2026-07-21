@@ -13,8 +13,6 @@ Responsibilities
 from __future__ import annotations
 
 
-import uuid
-
 from app.models.student import Student
 from app.repositories.student_repository import (
     StudentRepository,
@@ -136,7 +134,7 @@ def test_get_by_invalid_id(
 
     result = repo.get_by_id(
         db=db_session,
-        obj_id=uuid.uuid4(),
+        obj_id=999999999,
     )
 
 

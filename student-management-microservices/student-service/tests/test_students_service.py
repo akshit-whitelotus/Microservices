@@ -13,8 +13,6 @@ Responsibilities
 
 from __future__ import annotations
 
-import uuid
-
 import pytest
 
 from app.services.student_service import StudentService
@@ -140,7 +138,7 @@ def test_get_student_not_found(
 
         service.get_student(
             db=db_session,
-            student_id=uuid.uuid4(),
+            student_id=999999999,
         )
 
 

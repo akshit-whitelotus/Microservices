@@ -197,11 +197,8 @@ def test_update_missing_student(
     authenticated_client,
 ):
 
-    import uuid
-
-
     response = authenticated_client.patch(
-        f"/students/{uuid.uuid4()}",
+        "/students/999999999",
         json={
             "course": "Physics",
         },
@@ -216,7 +213,7 @@ def test_update_missing_student(
 # Invalid UUID
 # ---------------------------------------------------------
 
-def test_update_invalid_uuid(
+def test_update_non_numeric_id(
     authenticated_client,
 ):
 

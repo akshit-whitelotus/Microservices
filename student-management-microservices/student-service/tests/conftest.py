@@ -145,20 +145,52 @@ def override_database(
 # Mock Authentication
 # ---------------------------------------------------------
 
-@pytest.fixture
-def mock_auth():
+def _make_current_user_override(role: str):
 
     async def override_current_user():
 
         return TokenPayload(
             sub="1",
+            role=role,
             iss="auth-service",
             aud="student-service",
             exp=9999999999,
             iat=1000000000,
         )
 
-    app.dependency_overrides[get_current_user] = override_current_user
+    return override_current_user
+
+
+@pytest.fixture
+def mock_auth():
+    """
+    Mock a "teacher" principal -- the role required for the
+    create/update/delete student endpoints. Most existing tests
+    exercise those write paths, so this is the default role.
+    """
+
+    app.dependency_overrides[get_current_user] = _make_current_user_override(
+        "teacher"
+    )
+
+    yield
+
+    app.dependency_overrides.pop(
+        get_current_user,
+        None,
+    )
+
+
+@pytest.fixture
+def mock_auth_student():
+    """
+    Mock a "student" principal -- used to assert that non-teacher
+    roles are correctly rejected (403) from write endpoints.
+    """
+
+    app.dependency_overrides[get_current_user] = _make_current_user_override(
+        "student"
+    )
 
     yield
 
@@ -185,13 +217,30 @@ def client(
 
 
 # ---------------------------------------------------------
-# Authenticated client (mock authentication)
+# Authenticated client (mock authentication, role=teacher)
 # ---------------------------------------------------------
 
 @pytest.fixture
 def authenticated_client(
     override_database,
     mock_auth,
+):
+
+    with TestClient(
+    app,
+    raise_server_exceptions=False,
+) as client:
+        yield client
+
+
+# ---------------------------------------------------------
+# Authenticated client (mock authentication, role=student)
+# ---------------------------------------------------------
+
+@pytest.fixture
+def student_client(
+    override_database,
+    mock_auth_student,
 ):
 
     with TestClient(

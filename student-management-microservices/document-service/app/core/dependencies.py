@@ -6,6 +6,7 @@ from fastapi.security import HTTPBearer
 
 from app.core.security import decode_token
 from app.schemas.token import TokenPayload
+from shared.auth.dependencies import require_roles
 
 
 security = HTTPBearer()
@@ -28,34 +29,27 @@ def get_current_user(
             detail="Invalid authentication token",
         )
 
-
-    return TokenPayload(
-        sub=payload["sub"],
-        role=payload["role"],
-        exp=payload["exp"],
-        iat=payload["iat"],
-
-        iss=payload["iss"],
-        aud=payload["aud"],
-    )
-
-
-
-def require_teacher(
-    current_user: TokenPayload = Depends(
-        get_current_user
-    ),
-) -> TokenPayload:
-    """
-    Allow only teacher role.
-    """
-
-    if current_user.role != "teacher":
-
+    try:
+        return TokenPayload(
+            sub=payload["sub"],
+            role=payload["role"],
+            exp=payload["exp"],
+            iat=payload["iat"],
+            iss=payload["iss"],
+            aud=payload["aud"],
+        )
+    except (KeyError, ValueError):
+        # A well-signed token that's still missing/malformed claims
+        # (e.g. no "role") is an authentication failure, not a server
+        # error.
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Teacher role required",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication payload",
         )
 
 
-    return current_user
+
+require_teacher = require_roles(
+    "teacher",
+    get_current_user=get_current_user,
+)

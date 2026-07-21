@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 sqlalchemy
-psycopg2-binary
+asyncpg
 alembic
 
 httpx
@@ -16,3 +16,8 @@ pydantic-settings
 pypdf
 
 python-dotenv
+
+-e ..
+
+pytest
+pytest-asyncio

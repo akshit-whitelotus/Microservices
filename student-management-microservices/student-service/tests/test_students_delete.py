@@ -100,11 +100,8 @@ def test_delete_missing_student(
     authenticated_client,
 ):
 
-    import uuid
-
-
     response = authenticated_client.delete(
-        f"/students/{uuid.uuid4()}"
+        "/students/999999999"
     )
 
 
@@ -122,15 +119,15 @@ def test_delete_missing_student(
 
 
 # ---------------------------------------------------------
-# Invalid UUID
+# Non-Numeric ID
 # ---------------------------------------------------------
 
-def test_delete_invalid_uuid(
+def test_delete_non_numeric_id(
     authenticated_client,
 ):
 
     response = authenticated_client.delete(
-        "/students/not-a-valid-uuid"
+        "/students/not-a-valid-id"
     )
 
 
