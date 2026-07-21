@@ -35,15 +35,12 @@ class AuthService:
                 detail="Email already exists",
             )
 
-        role = user.role if user.role in {"teacher", "student"} else "student"
-
         db_user = User(
             username=user.username,
             email=user.email,
             hashed_password=get_password_hash(
                 user.password
             ),
-            role=role,
         )
 
         return await self.repo.create(

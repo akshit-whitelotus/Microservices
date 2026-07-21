@@ -11,6 +11,7 @@ async def test_token_payload_structure():
 
     payload={
         "sub":"1",
+        "role": "student" or "teacher",
         "iss":"auth-service",
         "aud":"student-service",
         "exp":123456,
